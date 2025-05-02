@@ -1,99 +1,46 @@
-int const MAX_ARRAY_SIZE = 32768;
+#include <ContainerClass.h>
 
-struct ATMNCStatInfo{
-  ATMNCStatInfo();
-  void branch(TTree* tree);
-  void setBranchAddress(TTree* tree);
-  double crsamp;
-  double crsim;
-  double fintsum;
-  double fintEach[4]; // element size is dummy. acturally it is [n1ry]
-  double sarea;
-  double omega;
-  double tequiv;
-  double fact1ry;
-};
+ATMNCHistInfo::ATMNCHistInfo(){
+  nkind = 0;
+}
 
+void ATMNCHistInfo::branch(TTree* tree){
+  tree->Branch("isite",&isite,"isite/I");
+  tree->Branch("icosz",&icosz,"icosz/I");
+  tree->Branch("iazim",&iazim,"iazim/I");
+  tree->Branch("Darea",&Darea,"Darea/D");
+  tree->Branch("Domega",&Domega,"Domega/D");
+  tree->Branch("coszFrom",&coszFrom,"coszFrom/D");
+  tree->Branch("coszTo",&coszTo,"coszTo/D");
+  tree->Branch("azimFrom",&azimFrom,"azimFrom/D");
+  tree->Branch("azimTo",&azimTo,"azimTo/D");
 
-struct ATMNCInputInfo{
-  ATMNCInputInfo();
-  void init();
-  void dump();
-  void read(std::string inputFile);
-  void branch(TTree *tree);
-  void setBranchAddress(TTree *tree);
+  tree->Branch("nkind",&nkind,"nkind/I");
+  tree->Branch("kind",kind,"kind[nkind]/I");
+  tree->Branch("ebin",ebin,Form("ebin[%d]/D",nbin));
+  tree->Branch("nobs",nobs,Form("nobs[nkind][%d]/D",nbin));
+  tree->Branch("nobsErr",nobsErr,Form("nobsErr[nkind][%d]/D",nbin));
+  tree->Branch("flux",flux,Form("flux[nkind][%d]/D",nbin));  
+}
 
-  // for the simulation
-  //  static int const fnameLength = 100;
-  //  char pref[fnameLength];
-  std::string* m_inputFile;
-  std::string* pref;
-  int n1ry;
-  int kind1ry[16];          // [n1ry] kind1ry
-  //  char f1ryFile[16][fnameLength]; // [n1ry] data table file
-  std::string* f1ryFile[16];
-  //  char cfil[fnameLength]; // cutoff table
-  //  char gfil[fnameLength]; // geomagnetic field table (IGRF)
-  //  char afil[fnameLength]; //  Air density table
-  std::string* cfil; // cutoff table
-  std::string* gfil; // geomagnetic field table (IGRF)
-  std::string* afil; //  Air density table
-  int mnth;   // start_month*100 + month_end
-  double dmyr; // Year from IGRF date
-  double epmi; // Min energy for primary CRs
-  double lat0; // Center Lattitide of CR injection
-  double lon0; // Center Longitude of CR injection
-  double rsmp; // Sampling radius in degree
-  double czmi; // Sampling minimum cos(zenith)
-  double hinj; // CR injection Height
-  double ehmi; // Minimum hadron int. energy
-  double eemi; // Minimum elemag int. energy
-  double eprp; // Minimum Energy for all particle propagation
-  double tlim; // Maximum time for p,n,e,g propagation
-  double rbnd; // Maximum distance from earth center
-  double epht; // below this use jam int model
-  bool noem;   // swith off elemag int.
-  bool auti;  // Auto generation of random seed
-  int nwup;  // Call rndc before simulation
-  bool dbg1;  // Record random seed for each event
-  bool dbg2;  // Record random seed for each particle
-  int seed[2];  // Seeds in case for auti
-  //char vfil[fnameLength]; //
-  //  char vpfl[fnameLength]; //
-  std::string* vfil;
-  std::string* vpfl;
-  int neve; // CR// to sample
-  double fcrs; // Factor for cross section
-  double rpft; // Production ratio for Jam
-  double jobt; // Maximum Jobtime
-  
-  // for the observation
-  //  char rfil[fnameLength];
-  //  char ofil[fnameLength];
-  std::string* rfil;
-  std::string* ofil;
-  bool is1d;
-  int nsite;
-  double siteParam[16][4]; //[nsite][nparam(=4)]
-  double comi;  // Minimum cos(zenith) to obs
-  int nczo;  // Observation cos(zenith) devision #
-  int nazo;  // Observation azimuth devision #
-  int nkind;
-  int obsp[16]; //[nkind]
-  double eomi; // Minimum energy to obs
-  double etmi; // Minimum energy in table
-  bool alpr; // Print when observed with 1ry
-  int nstp[2]; // print every [0] events and stop at [1] prints
-};
+void ATMNCHistInfo::setBranchAddress(TTree* tree){
+  tree->SetBranchAddress("isite",&isite);
+  tree->SetBranchAddress("icosz",&icosz);
+  tree->SetBranchAddress("iazim",&iazim);
+  tree->SetBranchAddress("Darea",&Darea);
+  tree->SetBranchAddress("Domega",&Domega);
+  tree->SetBranchAddress("coszFrom",&coszFrom);
+  tree->SetBranchAddress("coszTo",&coszTo);
+  tree->SetBranchAddress("azimFrom",&azimFrom);
+  tree->SetBranchAddress("azimTo",&azimTo);
 
-class ATMNCFileHandler{
- public:
-  ATMNCFileHandler();
-  void ascii2root(std::string inputAscii, std::string outputRoot);
-  void sum(std::string Root1, std::string Root2, std::string newRoot="");
-  
-};
-
+  tree->SetBranchAddress("nkind",&nkind);
+  tree->SetBranchAddress("kind",kind);
+  tree->SetBranchAddress("ebin",ebin);
+  tree->SetBranchAddress("nobs",nobs);
+  tree->SetBranchAddress("nobsErr",nobsErr);
+  tree->SetBranchAddress("flux",flux);
+}
 
 
 ATMNCStatInfo::ATMNCStatInfo(){
@@ -101,29 +48,46 @@ ATMNCStatInfo::ATMNCStatInfo(){
   sarea =  omega = fintsum = -1;
   tequiv = 0;
   fact1ry = -1;
-  for(int i=0;i<4;i++) fintEach[i] = 0;
+  for(int i=0;i<2;i++){
+    for(int k=0;k<mtbl;k++){
+      ebin1ry[i][k] = 0;
+    }
+    for(int j=0;j<4;j++){
+      for(int k=0;k<mtbl;k++){
+	nobs1ry[i][j][k] = dflux1ry[i][j][k] = 0;
+      }
+    }
+  }
 }
+
 
 void ATMNCStatInfo::branch(TTree* tree){
   tree->Branch("crsim",&crsim,"crsim/D");
   tree->Branch("crsamp",&crsamp,"crsamp/D");
   tree->Branch("fintsum",&fintsum,"fintsum/D");
-  tree->Branch("fintEach",fintEach,"fintEach[4]/D");
   tree->Branch("sarea",&sarea,"sarea/D");
   tree->Branch("omega",&omega,"omega/D");
   tree->Branch("tequiv",&tequiv,"tequiv/D");
   tree->Branch("fact1ry",&fact1ry,"fact1ry/D");
+
+
+  tree->Branch("ebin1ry",ebin1ry,Form("ebin1ry[2][%d]/D",mtbl));
+  tree->Branch("nobs1ry",nobs1ry,Form("nobs1ry[2][4][%d]/D",mtbl));
+  tree->Branch("dflux1ry",dflux1ry,Form("dflux1ry[2][4][%d]/D",mtbl));
 }
 
 void ATMNCStatInfo::setBranchAddress(TTree* tree){
   tree->SetBranchAddress("crsim",&crsim);
   tree->SetBranchAddress("crsamp",&crsamp);
   tree->SetBranchAddress("fintsum",&fintsum);
-  tree->SetBranchAddress("fintEach",fintEach);
   tree->SetBranchAddress("sarea",&sarea);
   tree->SetBranchAddress("omega",&omega);
   tree->SetBranchAddress("tequiv",&tequiv);
   tree->SetBranchAddress("fact1ry",&fact1ry);
+
+  tree->SetBranchAddress("ebin1ry",ebin1ry);
+  tree->SetBranchAddress("nobs1ry",nobs1ry);
+  tree->SetBranchAddress("dflux1ry",dflux1ry);
 }
 
 ATMNCInputInfo::ATMNCInputInfo(){
@@ -189,13 +153,6 @@ void ATMNCInputInfo::dump(){
 }
 
 void ATMNCInputInfo::init(){
-  //  sprintf(pref,"Null");
-  //  sprintf(vfil,"Null");
-  //  sprintf(vpfl,"Null");
-  //  sprintf(cfil,"Null");
-  //  sprintf(rfil,"Null");
-  //  sprintf(gfil,"irgf05.d");
-  //  sprintf(afil,"airdensity-std.d");
   m_inputFile = new std::string;
   pref = new std::string;
   vfil = new std::string;
@@ -254,181 +211,6 @@ void ATMNCInputInfo::init(){
   alpr = false;
 }
 
-void ATMNCInputInfo::read(std::string inputFile){
-  std::string const parName[ParticleCode::nParType]={
-    "", "E+", "E-","GAMM","K+",
-    "K-","K0L","K0S","N+","N-",
-    "P+","P-","PI+","PI-","PI0",
-    "MU+","MU-","NUE","NUEB","NUM",
-    "NUMB","ALPH"};
-
-
-  *m_inputFile = inputFile;
-  std::ifstream ifs(inputFile.c_str());
-  std::string line;
-  while(std::getline(ifs,line)){
-    // replace "," to " "  
-    while(1){
-      std::string::size_type pos=line.find(",");
-      if(pos==std::string::npos){
-	break;
-      }
-      line.erase(pos,1);
-      line.insert(pos," ");
-    }
-
-    std::stringstream ss(line);
-    std::string first;
-    ss>>first;
-    std::string arg=first.substr(0,4);
-
-    if(arg=="pref" ){
-      ss>>*pref;
-    }
-    else if(arg=="cfil" ){
-      ss>>*cfil;
-    }
-    else if(arg =="gfil" ){
-      ss>>*gfil;
-    }
-    else if(arg=="afil" ){
-      ss>>*afil;
-    }
-    else if(arg=="vfil" ){ 
-      ss>>*vfil;
-    }
-    else if(arg=="vpfl" ){
-      ss>>*vpfl;
-    }
-    else if(arg=="rfil" ){
-      ss>>*rfil;
-    }
-    else if(arg=="ofil"){
-      ss>>*ofil;
-    }
-    /*  
-    if(arg=="pref" || arg=="cfil" || arg =="gfil" || arg=="afil" || arg=="vfil" || arg=="vpfl" || arg=="rfil" || arg=="ofil"){
-      std::string fname;
-      ss >> fname;
-      
-      if(arg=="pref" ){
-	if(fname.length()<fnameLength-1) sprintf(pref,fname.c_str());
-	else sprintf(pref,fname.substr(0,fnameLength-1).c_str());
-      } 
-      if(arg=="cfil" ){
-	if(fname.length()<fnameLength-1) sprintf(cfil,fname.c_str());
-	else sprintf(cfil,fname.substr(0,fnameLength-1).c_str());
-      }
-      if(arg =="gfil" ){
-	if(fname.length()<fnameLength-1) sprintf(gfil,fname.c_str());
-	else sprintf(gfil,fname.substr(0,fnameLength-1).c_str());
-      }
-      if(arg=="afil" ){
-	if(fname.length()<fnameLength-1) sprintf(afil,fname.c_str());
-	else sprintf(afil,fname.substr(0,fnameLength-1).c_str());
-      }
-      if(arg=="vfil" ){ 
-	if(fname.length()<fnameLength-1) sprintf(vfil,fname.c_str());
-	else sprintf(vfil,fname.substr(0,fnameLength-1).c_str());
-      }
-      if(arg=="vpfl" ){
-	if(fname.length()<fnameLength-1) sprintf(vpfl,fname.c_str());
-	else sprintf(vpfl,fname.substr(0,fnameLength-1).c_str());
-      }
-      if(arg=="rfil" ){
-	if(fname.length()<fnameLength-1) sprintf(rfil,fname.c_str());
-	else sprintf(rfil,fname.substr(0,fnameLength-1).c_str());
-      }
-      if(arg=="ofil"){
-	if(fname.length()<fnameLength-1) sprintf(ofil,fname.c_str());
-	else sprintf(ofil,fname.substr(0,fnameLength-1).c_str());
-      }
-    }
-    */
-    else if(arg=="f1ry"){
-      std::string kind,fname;
-      ss >> kind >> fname;
-      //      std::cout<<"fname:"<<fname<<" "<<fname.length()<<std::endl;
-      //      sprintf(f1ryFile[n1ry],fname.c_str());   
-      //      kind1ry[n1ry] = 0;
-      *f1ryFile[n1ry] = fname;
-      for(int i=0;i<nParType;i++){
-	if(kind==parName[i]) kind1ry[n1ry] = i;
-      }
-      n1ry++;
-    }
-    else if(arg=="mnth") ss >> mnth; 
-    else if(arg=="dmyr") ss >> dmyr; 
-    else if(arg=="epmi") ss >> epmi; 
-    else if(arg=="lat0") ss >> lat0; 
-    else if(arg=="lon0") ss >> lon0; 
-    else if(arg=="rsmp") ss >> rsmp; 
-    else if(arg=="czmi") ss >> czmi; 
-    else if(arg=="hinj") ss >> hinj; 
-    else if(arg=="ehmi") ss >> ehmi; 
-    else if(arg=="eemi") ss >> eemi; 
-    else if(arg=="eprp") ss >> eprp; 
-    else if(arg=="tlim") ss >> tlim; 
-    else if(arg=="rbnd") ss >> rbnd; 
-    else if(arg=="epht" || arg=="ejam") ss >> epht; 
-    else if(arg=="noem" || arg=="auti" || arg=="dbg1" || arg=="dbg2" || arg=="alpr" || arg=="is1d"){
-      std::string tf;
-      ss >> tf;       
-      bool isTrue;
-      if(tf=="T" || tf=="t" || tf=="Yes" || tf=="yes" || tf=="Y" || tf=="y")
-	isTrue=true;
-      else isTrue = false;
-      if(arg=="noem") noem = isTrue;
-      if(arg=="auti") auti = isTrue;
-      if(arg=="dbg1") dbg1 = isTrue;
-      if(arg=="dbg2") dbg2 = isTrue;
-      if(arg=="alpr") alpr = isTrue;
-      if(arg=="is1d") is1d = isTrue;
-    }
-    else if(arg=="nwup") ss >> nwup; 
-    else if(arg=="seed"){
-      ss>>seed[0]>>seed[1];
-    }
-    else if(arg=="neve") ss >> neve;
-    else if(arg=="fcrs") ss >> fcrs;
-    else if(arg=="rpft") ss >> rpft;
-    else if(arg=="jobt") ss >> jobt;
-  
-  // for the observation
-    //    else if(arg=="rfil") ss >> rfil;
-    //    else if(arg=="ofil") ss >> ofil;
-    else if(arg=="site"){
-      //      std::cout<<line<<std::endl;
-      for(int i=0;i<4;i++){
-	ss>>siteParam[nsite][i];
-	//	std::cout<<" "<<siteParam[nsite][i]<<std::endl;
-      }
-      nsite++;
-    }
-    else if(arg=="comi") ss >> comi; 
-    else if(arg=="nczo") ss >> nczo; 
-    else if(arg=="nazo") ss >> nazo; 
-    else if(arg=="obsp"){
-      std::string kind;
-      while(ss>>kind){
-	if(kind.at(0)=='#'){
-	  //	  std::cout<<kind<<std::endl;
-	  break;
-	}
-	obsp[nkind] = 0;
-	for(int i=0;i<nParType;i++){
-	  if(kind==parName[i]) obsp[nkind] = i;
-	}
-	nkind++;
-      }
-    }
-    else if(arg=="eomi") ss >> eomi;       
-    else if(arg=="etmi") ss >> etmi;
-    else if(arg=="nstp"){
-      ss >> nstp[0]>>nstp[1];       
-    }
-  }
-}
   
 void ATMNCInputInfo::branch(TTree *tree){
   tree->Branch("inputFile",&m_inputFile);
@@ -549,5 +331,6 @@ void ATMNCInputInfo::setBranchAddress(TTree *tree){
   tree->SetBranchAddress("alpr",&alpr);       
   tree->SetBranchAddress("nstp",&nstp);       
 }
+
 
 

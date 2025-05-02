@@ -1,122 +1,10 @@
-#ifndef Histgrammer_h__
-#define Histgrammer_h__
-
-#include "ContainerClass.h"
-#include "PrimaryGenerator.h"
-#include "atmnc-constants.h"
-#include "atmnc-particle-code.h"
-
-typedef bool (* HISTO_HITTESTFNC)(int site,int pid, double *mom,double *pos);
-
-class Histogrammer{
-public:
-  Histogrammer(ATMNCInputInfo input);
-
-  // to get/add Histogram
-  // you should prepare arrays with length large enough.
-  void getHistogram(int ikind, int isite, int icosz, int iazim,
-		    int &num, double ene[], double nobs[], double err[]);
-  void addHistogram(int ikind, int isite, int icosz, int iazim,
-		    int num, double ene[], double nobs[], double err[]);
-  
-
-  // set/add data
-  virtual void setTequiv(double tequiv){m_tequiv = tequiv;}
-  virtual void setTequiv(TTree *trin);
-  void setDarea(int isite, double darea){ 
-    m_Darea[isite] = darea; 
-    std::cout<<"reset Darea["<<isite<<"] to "<<darea<<std::endl;
-  }
-  void setHitTestFunc(HISTO_HITTESTFNC func){
-    m_hitTestFunc = func;
-  }
-
-  
-  // get the aggregated spectrum 
-  void getSpectrum(int ik, int is, int ic, int ia, SpectrumHandler &spec);
-  void averageFlux(int ik,int is,int icmin,int icmax,int iamin,int iamax,SpectrumHandler &spec);
-  double getTequiv(){return m_tequiv;}
-  double getDarea(int isite){return m_Darea[isite];}
-  double getDomega(int icosz){return m_Domega[icosz];}
-  virtual double getNormFactor(int is,int ic);
-
-  double getFactorOfLastAverage(){return m_factorOfLastAverage;}
-
-  // functions to get histogram's index
-  int getI(int ikind,int isite,int icosz,int iazim);
-  double getCosz(double ic);
-  double getAzim(double ia);
-  double getEne(int ie){return m_ene[ie];}
-  int getCoszIndex(double theta);
-  int getAzimIndex(double phi);
-  int getEneIndex(double ene);
-  int getNKind(){return m_nkind;}
-  int getNSite(){return m_nsite;}
-  int getNCosz(){return m_ncosz;}
-  int getNAzim(){return m_nazim;}
-  int getNBin(){return m_nbin;}
-  //  double getTheta(TVector3 const &mom, TVector3 const &pos);
-  //  double getPhi(TVector3 const &mom, TVector3 const &pos);
-  int getPID(int ik);
-  
-  //private:
- protected:
-  void getDirection(TVector3 const &mom, TVector3 const &pos,
-		    double &theta,double &phi);
-  int  m_nkind;//default = 6;
-  int  m_nsite;//default = 8;
-  int  m_ncosz;//default = 40;
-  int  m_nazim;//default = 12;
-  int  m_nbin;// default = 103;
-  double m_cmin; 
-  //  double m_cmax;
-  double m_emin;
-  double m_Letmi;
-  int m_pid2ik[ParcleCode::nParType];
-
-  double m_Darea[128];//[nsite]
-  double m_Domega[128];//[ncosz]
-  double m_tequiv;
-  double m_factorOfLastAverage;
-  
-  double **m_nobs;// [nkind*nsite*ncosz*nazim][nbin]
-  double **m_err2; // [nkind*nsite*ncosz*nazim][nbin]
-  double *m_ene;  // [nbin]
-  HISTO_HITTESTFNC m_hitTestFunc;
-
-};
-
-class Histogrammer1D : public Histogrammer
-{
- public:
-  Histogrammer1D(ATMNCInputInfo input);
-  virtual double getNormFactor(int is,int ic);
-  void set_crsamp_fintsum(double crsamp,double fintsum){
-    m_tequiv = crsamp / fintsum / (4*TMath::Pi());
-  }
-  void setTequiv(double tequiv){
-    std::cout<<"WARNING: in 1D, use set_crsamp_fintsum"<<std::endl;
-  }
-  void setTequiv(TTree* tr){
-    std::cout<<"WARNING: in 1D, use set_crsamp_fintsum"<<std::endl;
-  }
-  //  void averageFlux(int ik,int is,int icmin,int icmax,int iamin,int iamax,SpectrumHandler &spec);
-
- private:
-  double cost_inj(double cost);
-    
-};
-
-
-#endif //Histgrammer_h__
-#include <cxxHeaders.h>
-#include <rootHeaders.h>
 #include "Histogrammer.h"
 
 
 Histogrammer::Histogrammer(ATMNCInputInfo input)
-  : m_hitTestFunc(0)
 {
+  m_factorOfLastAverage = 1.;
+  
   m_nkind = input.nkind;//default = 6;
   m_nsite = input.nsite;//default = 8;
   m_ncosz = input.nczo;//default = 40;
@@ -200,11 +88,9 @@ void Histogrammer::addHistogram(int ikind, int isite, int icosz, int iazim,
     std::cout<<"error in addHistogram: The histogram with different bin division is attempted to add."<<std::endl;
     exit(1);
   }
-  
   int I = getI(ikind,isite,icosz,iazim);
   for(int i=0;i<m_nbin;i++){
     if(fabs(ene[i]- m_ene[i])/m_ene[i]>1e-3){
-      std::cout<<"warning in addHistogram: different E value at "<<i<<"-th bin."<<std::endl;
     }
     m_nobs[I][i] += nobs[i];
     m_err2[I][i] += pow(err[i],2);
@@ -272,8 +158,8 @@ void Histogrammer::getSpectrum(int ik,int is,int ic,int ia, SpectrumHandler &spe
   // rate was set to SpectrumHandler. flux is calculated inside it.
   spec.setRate(m_nbin,m_ene,num,nume);
   
-  delete num;
-  delete nume;
+  delete [] num;
+  delete [] nume;
 }
 
 
@@ -331,25 +217,20 @@ void Histogrammer::averageFlux(int ik,int is,int icmin,int icmax,int iamin,int i
     }
     // rate was converted to flux by using SpectrumHandler
     spec.setRate(m_nbin,m_ene,num,nume);
-  
+    
     // averaging the flux over zenith angle
     double integFactor = getCosz(ic) - getCosz(ic+1);
     denomi += integFactor;
-    //    std::cout<<"is,ic,factor,tequiv,Darea,dom,integFactor:"<<is<<" "<<ic<<" "<<factor<<" "<<m_tequiv<<" "<<m_Darea[is]<<" "<<dom<<" "<<integFactor<<std::endl;
+    
     for(int ibin=1;ibin<m_nbin;ibin++){
       double E = spec.bin2Ene(ibin);
       flux[ibin] += spec.getFlux(E) * integFactor;
-      // chang 230217
-      //      fluxe[ibin] += pow(spec.getFluxErr(E),2) * integFactor;
       fluxe[ibin] += pow(spec.getFluxErr(E) * integFactor,2);
     }
   }
   
   for(int ibin=1;ibin<m_nbin;ibin++){
     flux[ibin] /= denomi;
-    // change 230217
-    //    fluxe[ibin] /= denomi;
-    //    fluxe[ibin] = sqrt(fluxe[ibin]);
     fluxe[ibin] = sqrt(fluxe[ibin]);
     fluxe[ibin] /= denomi;
     
@@ -430,59 +311,4 @@ void Histogrammer::getDirection(TVector3 const &mom, TVector3 const &pos,
   TVector3 dir(dirX,dirY,dirZ);
   thetaDir = dir.Theta();
   phiDir = dir.Phi();
-}
-
-
-Histogrammer1D::Histogrammer1D(ATMNCInputInfo input) : Histogrammer(input){
-  // overwrite dArea
-  for(int is=0;is<m_nsite;is++){
-    m_Darea[is] = 1.;
-  }
-  double const re = Constants::rEarth;
-  double const ri = input.hinj+re;
-  double const rr = re/ri;
-  double const a = 1-rr*rr;
-  // overwrite dOmega
-  for(int ic=0;ic<m_ncosz;ic++){
-    double ct1 = getCosz(ic);
-    double ct2 = getCosz(ic+1);
-    double ct[2]={ct1,ct2};
-    double ct_inj[2];
-    for(int i=0;i<2;i++){
-      ct_inj[i] = cost_inj(ct[i]);
-    }
-    double integ[2];
-    for(int i=0;i<2;i++){
-      integ[i] = ct[i]*ct_inj[i]+a*(log(ct[i]+ct_inj[i]/rr));
-    }
-    double ct_inj_ave = -0.5/(ct[0]-ct[1])*(integ[1]-integ[0]);
-    m_Domega[ic] = TMath::Pi()*(ct[0] - ct[1])/m_nazim/ct_inj_ave;
-  }
-}
-
-double Histogrammer1D::cost_inj(double cost){
-  double const re=6378.140e3;
-  double const hi = 100000.;
-  double const ri = re+hi;
-  double const rr = re/ri;
-  double const a = 1-rr*rr;
-  return rr*sqrt(cost*cost+a);
-}
-
-
-double Histogrammer1D::getNormFactor(int is,int ic){
-  
-  double facInv = m_tequiv*m_Domega[ic];
-  if(facInv == 0){
-    static bool alreadyWarn=false;
-    if(!alreadyWarn){
-      alreadyWarn=true;
-      std::cout<<"Histogrammer1D::getNormaFactor: not a proper normalization factor"<<std::endl
-	       <<"is, ic: "<<is<<" "<<ic<<std::endl
-	       <<"  N_gen / fint / 4pi, Domega:"<<m_tequiv<<" "<<m_Domega[ic]<<std::endl
-	       <<"the factor is set to 1."<<std::endl;
-    }
-    return 1;
-  }
-  return 1./facInv;
 }

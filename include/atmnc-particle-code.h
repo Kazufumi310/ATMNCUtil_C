@@ -17,7 +17,7 @@ namespace ParticleCode {
     aMnu=0., aMg=0., aMneut=0.93956563, aMpro=0.93827231,
     aMalpha=3.72737;
   
-  double const mass[nParticle]={ 
+  double const mass[nParType]={ 
     //     *  e-   e+  gam, 
     0, aMe, aMe, aMg, 
     //     K+,   K-    KL    Ks
@@ -30,6 +30,14 @@ namespace ParticleCode {
     aMmu, aMmu, aMnu, aMnu, aMnu, aMnu, 
     //     alpha
     aMalpha };
+
+  std::string const parName[nParType]={
+    "", "E+", "E-","GAMM","K+",
+    "K-","K0L","K0S","N+","N-",
+    "P+","P-","PI+","PI-","PI0",
+    "MU+","MU-","NUE","NUEB","NUM",
+    "NUMB","ALPH" };
+  
 }
 
 #endif // ParticleCode_h__
