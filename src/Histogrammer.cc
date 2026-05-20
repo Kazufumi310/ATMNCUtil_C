@@ -222,21 +222,26 @@ void Histogrammer::averageFlux(int ik,int is,int icmin,int icmax,int iamin,int i
     double integFactor = getCosz(ic) - getCosz(ic+1);
     denomi += integFactor;
     
-    for(int ibin=1;ibin<m_nbin;ibin++){
+    //    for(int ibin=1;ibin<m_nbin;ibin++){
+    for(int ibin=0;ibin<m_nbin;ibin++){ // 260516 modified, 
       double E = spec.bin2Ene(ibin);
       flux[ibin] += spec.getFlux(E) * integFactor;
       fluxe[ibin] += pow(spec.getFluxErr(E) * integFactor,2);
     }
   }
   
-  for(int ibin=1;ibin<m_nbin;ibin++){
+  //  for(int ibin=1;ibin<m_nbin;ibin++){
+  for(int ibin=0;ibin<m_nbin;ibin++){ // 260516 modified
     flux[ibin] /= denomi;
     fluxe[ibin] = sqrt(fluxe[ibin]);
     fluxe[ibin] /= denomi;
     
   }
-  flux[0] = flux[1];
-  fluxe[0] = fluxe[1];
+  // 260516 comment out
+  /*
+    flux[0] = flux[1];
+    fluxe[0] = fluxe[1];
+  */
   //  spec.setFlux(m_nbin,m_ene,flux,fluxe);
   spec.setFlux(m_nbin,m_ene,flux,fluxe,false);
   

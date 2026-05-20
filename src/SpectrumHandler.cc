@@ -121,6 +121,7 @@ bool SpectrumHandler::convertRateToFlux(){
     }else{
       m_flux[0] = 0;
     }
+    //    std::cout<<"debug : m_rate[0]:"<<m_rate[0]<<" m_rate[1]:"<<m_rate[1]<<" mclux[0]:"<<m_flux[0]<<" m_flux[1]:"<<m_flux[1]<<" ree:"<<ree<<std::endl;
     
     // calcurate error
     if(m_rateErr[i-1]==0 && m_rateErr[i]==0 ) m_fluxErr[i] = 0;

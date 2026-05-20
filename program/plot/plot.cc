@@ -172,9 +172,9 @@ bool ArgHandler::getArg(int &argc, char** argv){
 
   
   std::cout<<"plotFlag:"
-	   <<"vsE(average all):"<<getPlotFlag(vsE_average)
-    	   <<"vsE(average phi):"<<getPlotFlag(vsE_averageAzim)
-	   <<"vsTheta:"<<getPlotFlag(vsTheta)<<std::endl
+	   <<"vsE(average all):"<<getPlotFlag(vsE_average)<<" "
+    	   <<"vsE(average phi):"<<getPlotFlag(vsE_averageAzim)<<" "
+	   <<"vsTheta:"<<getPlotFlag(vsTheta)<<std::endl<<" "
 	   <<"vsPhi:"<<getPlotFlag(vsPhi)<<std::endl;
   std::cout<<"additional factor: E^("<<m_eFactor<<")"<<std::endl;
   
@@ -231,16 +231,16 @@ int main(int argc, char** argv){
 
   s_histView = new TH1D("histView",";E[GeV];# events",hister.getNBin(),log10(hister.getEne(0)),log10(hister.getEne(hister.getNBin())));
 
-  //  if(gArg.getPlotFlag(ArgHandler::vsE_average)){
-  plotAverage(hister,fout,canvas);
-  plotAverageAzim(hister,fout,canvas);
-  //  }
-  //  if(gArg.getPlotFlag(ArgHandler::vsTheta)){
-  plotVsTheta(hister,fout,canvas);
-  //  }
-  //  if(gArg.getPlotFlag(ArgHandler::vsPhi)){
-  plotVsPhi(hister,fout,canvas);
-  //  }
+  if(gArg.getPlotFlag(ArgHandler::vsE_average)){
+    plotAverage(hister,fout,canvas);
+    plotAverageAzim(hister,fout,canvas);
+  }
+  if(gArg.getPlotFlag(ArgHandler::vsTheta)){
+    plotVsTheta(hister,fout,canvas);
+  }
+  if(gArg.getPlotFlag(ArgHandler::vsPhi)){
+    plotVsPhi(hister,fout,canvas);
+  }
 
   writeEach(hister,fout);
   
@@ -255,6 +255,7 @@ int main(int argc, char** argv){
 
 
 void plotAverage(Histogrammer &hist,TFile &fout, TCanvas *canvas){
+  std::cout<<"plot averaged flux ..."<<std::endl;
   int const nazim = hist.getNAzim();
   int const ncosz = hist.getNCosz();
   int const nsite = hist.getNSite();
@@ -363,6 +364,7 @@ void plotAverage(Histogrammer &hist,TFile &fout, TCanvas *canvas){
 }
 
 void plotAverageAzim(Histogrammer &hist,TFile &fout, TCanvas *canvas){
+  std::cout<<"plot fluxes averaged around phi ..."<<std::endl;
   int const nazim = hist.getNAzim();
   int const ncosz = hist.getNCosz();
   int const nsite = hist.getNSite();
@@ -491,6 +493,7 @@ void plotAverageAzim(Histogrammer &hist,TFile &fout, TCanvas *canvas){
 
 
 void plotVsTheta(Histogrammer &hist,TFile &fout, TCanvas *canvas){
+  std::cout<<"plot flux vs theta ..."<<std::endl;
   double const targetE = 3.2; // GeV
   int const nazim = hist.getNAzim();
   int const ncosz = hist.getNCosz();
@@ -578,6 +581,7 @@ void plotVsTheta(Histogrammer &hist,TFile &fout, TCanvas *canvas){
 
 
 void plotVsPhi(Histogrammer &hist,TFile &fout, TCanvas *canvas){
+  std::cout<<"plot flux vs phi ..."<<std::endl;
   double const targetE = 3.2; // GeV
   int const nazim = hist.getNAzim();
   int const ncosz = hist.getNCosz();
@@ -661,6 +665,7 @@ void plotVsPhi(Histogrammer &hist,TFile &fout, TCanvas *canvas){
 
 
 void writeEach(Histogrammer &hister,TFile &fout){
+  std::cout<<"write graphs of all bins in TTree..."<<std::endl;
   fout.cd();
 
   TTree *trout = new TTree("histtr","each histogram and flux");

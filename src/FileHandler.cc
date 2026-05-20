@@ -31,7 +31,7 @@ void FileHandler::sum(std::vector<std::string> inputFileList, std::string output
   chinfo.GetEntry(0);
   Histogrammer hister(inputInfo);
 
-  
+  //////////// 1ry particle
   double tequivTot = 0;
   ATMNCStatInfo statOut;
   for(int ientry=0;ientry<chinfo.GetEntries();ientry++){
@@ -47,7 +47,7 @@ void FileHandler::sum(std::vector<std::string> inputFileList, std::string output
     }
   }
   std::cout<<"tequivTot:"<<tequivTot<<std::endl;
-  {
+  {  //
     SpectrumHandler spec;
     for(int iab=0;iab<2;iab++){
       for(int i1ry=0;i1ry<inputInfo.n1ry;i1ry++){
@@ -129,7 +129,7 @@ void FileHandler::sum(std::vector<std::string> inputFileList, std::string output
   trinfo->Write();
   trout->Write();
   fout.Close();
-  }
+}
 
 
 void FileHandler::ascii2root(std::string inputAscii, std::string outputRoot){

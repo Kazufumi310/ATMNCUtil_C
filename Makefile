@@ -22,4 +22,4 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.cc include/%.h
 	g++ $(CXXFLAGS) $< -o $@
 clean:
 	echo $(OBJS) 	
-	rm -f *.o $(LIBRARYUTIL)
+	rm -f $(OBJDIR)/*.o $(LIBRARYUTIL)
