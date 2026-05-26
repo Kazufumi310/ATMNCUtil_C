@@ -334,3 +334,118 @@ void ATMNCInputInfo::setBranchAddress(TTree *tree){
 
 
 
+
+HitInfo::HitInfo(){
+  nParticle = 0;
+  nhit = 0;
+  status = -1;
+
+  hitID = new int[s_maxHitSize];
+  khit = new int[s_maxHitSize];
+  site = new int[s_maxHitSize];
+  phit = new double*[s_maxHitSize];
+  rhit = new double*[s_maxHitSize];
+  phit[0] = new double[s_maxHitSize*3];
+  rhit[0] = new double[s_maxHitSize*3];
+  for(int i=1;i<s_maxHitSize;i++){
+    phit[i] = phit[0]+i*3;
+    rhit[i] = rhit[0]+i*3;
+  }
+  nParent = new int[s_maxHitSize];
+  parentID = new int*[s_maxHitSize];
+  parentID[0] = new int[s_maxHitSize*s_maxParent];
+  for(int i=1;i<s_maxHitSize;i++){
+    parentID[i] = parentID[0]+i*s_maxParent;
+  }
+
+  pid = new int[s_maxChainSize]; 
+  death = new int[s_maxChainSize];
+  trackid = new int[s_maxChainSize];
+  deadX = new double*[s_maxChainSize];
+  deadP = new double*[s_maxChainSize];
+  bornX = new double*[s_maxChainSize];
+  bornP = new double*[s_maxChainSize];
+  deadX[0] = new double[s_maxChainSize*3];
+  deadP[0] = new double[s_maxChainSize*3];
+  bornX[0] = new double[s_maxChainSize*3];
+  bornP[0] = new double[s_maxChainSize*3];
+  for(int i=1;i<s_maxChainSize;i++){
+    deadX[i] = deadX[0]+i*3;
+    deadP[i] = deadP[0]+i*3;
+    bornX[i] = bornX[0]+i*3;
+    bornP[i] = bornP[0]+i*3;
+  }
+}
+
+
+
+
+void HitInfo::branch(TTree* trout,int mode){
+  trout->Branch("nTotPar",&nTotPar,"nTotPar/I");
+  trout->Branch("nTotHit",&nTotHit,"nTotHit/I");
+
+  trout->Branch("status",&status,"status/I");
+
+  // hit information
+  trout->Branch("nhit",&nhit,"nhit/I");
+  trout->Branch("site",site,"site[nhit]/I");
+  trout->Branch("hitID",hitID,"hitID[nhit]/I"); // ID in particle chain
+  trout->Branch("khit",khit,"khit[nhit]/I");
+  trout->Branch("phit",phit[0],"phit[nhit][3]/D");
+  trout->Branch("rhit",rhit[0],"rhit[nhit][3]/D");
+  trout->Branch("nParent",nParent,"nParent[nhit]/I");
+  trout->Branch("parentID",parentID[0],Form("parentID[nhit][%d]/I",s_maxParent));  // ID in particle chain
+
+  // particle chain
+  trout->Branch("nParticle",&nParticle,"nParticle/I");
+  trout->Branch("trackid",trackid,"trackid[nParticle]/I"); // ID in verbose tree
+  trout->Branch("pid",pid,"pid[nParticle]/I");
+  trout->Branch("death",death,"death[nParticle]/I");
+  trout->Branch("deadP",deadP[0],"deadP[nParticle][3]/D");
+  trout->Branch("deadX",deadX[0],"deadX[nParticle][3]/D");
+  trout->Branch("bornP",bornP[0],"bornP[nParticle][3]/D");
+  trout->Branch("bornX",bornX[0],"bornX[nParticle][3]/D");
+} 
+
+void HitInfo::setBranchAddress(TTree* trin){
+  trin->SetBranchAddress("status",&status);
+
+  // hit information
+  trin->SetBranchAddress("nhit",&nhit);
+  trin->SetBranchAddress("site",site);
+  trin->SetBranchAddress("hitID",hitID);
+  trin->SetBranchAddress("khit",khit);
+  trin->SetBranchAddress("phit",phit[0]);
+  trin->SetBranchAddress("rhit",rhit[0]);
+  trin->SetBranchAddress("nParent",nParent);
+  trin->SetBranchAddress("parentID",parentID[0]);
+
+  // particle chain
+  trin->SetBranchAddress("nParticle",&nParticle);
+  trin->SetBranchAddress("trackid",trackid);
+  trin->SetBranchAddress("pid",pid);
+  trin->SetBranchAddress("death",death);
+  trin->SetBranchAddress("deadP",deadP[0]);
+  trin->SetBranchAddress("deadX",deadX[0]);
+  trin->SetBranchAddress("bornP",bornP[0]);
+  trin->SetBranchAddress("bornX",bornX[0]);
+} 
+
+
+void HitInfo::dump(){
+  std::cout<<"nParticle:"<<nParticle<<std::endl;
+  for(int ipar=0;ipar<nParticle;ipar++){
+    std::cout<<"origID,pid:"<<trackid[ipar]<<" "<<pid[ipar]<<std::endl;
+  }
+  
+  std::cout<<"nhit:"<<nhit<<std::endl;
+  for(int ihit = 0;ihit<nhit;ihit++){
+    std::cout<<"ihit, site, hitID, khit:"<<ihit<<" "<<site[ihit]<<" "<<hitID[ihit]<<" "<<khit[ihit]<<std::endl;
+    std::cout<<"nParent:"<<nParent[ihit]<<std::endl;
+    for(int i=0;i<nParent[ihit];i++){
+      std::cout<<" "<<parentID[ihit][i];
+    }
+    std::cout<<std::endl;
+  }
+  std::cout<<std::endl;
+}

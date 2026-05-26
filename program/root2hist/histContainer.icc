@@ -1,0 +1,34 @@
+
+struct HistContainer{
+  int ikind,isite,icosz,iazim,nbin;
+  double ene[4096],nobs[4096],err[4096],flux[4096],fluxE[4096];
+  void branch(TTree *trout);
+  void setBranchAddress(TTree *trin);
+};
+
+
+void HistContainer::branch(TTree* trout){
+  trout->Branch("ikind",&ikind,"ikind/I");
+  trout->Branch("isite",&isite,"isite/I");
+  trout->Branch("icosz",&icosz,"icosz/I");
+  trout->Branch("iazim",&iazim,"iazim/I");
+  trout->Branch("nbin",&nbin,"nbin/I");
+  trout->Branch("ene",ene,"ene[nbin]/D");
+  trout->Branch("nobs",nobs,"nobs[nbin]/D");
+  trout->Branch("err",err,"err[nbin]/D");
+  trout->Branch("flux",flux,"flux[nbin]/D");
+  trout->Branch("fluxE",fluxE,"fluxE[nbin]/D");
+}
+
+void HistContainer::setBranchAddress(TTree* trin){
+  trin->SetBranchAddress("ikind",&ikind);
+  trin->SetBranchAddress("isite",&isite);
+  trin->SetBranchAddress("icosz",&icosz);
+  trin->SetBranchAddress("iazim",&iazim);
+  trin->SetBranchAddress("nbin",&nbin);
+  trin->SetBranchAddress("ene",ene);
+  trin->SetBranchAddress("nobs",nobs);
+  trin->SetBranchAddress("err",err);
+  trin->SetBranchAddress("flux",flux);
+  trin->SetBranchAddress("fluxE",fluxE);
+}

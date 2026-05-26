@@ -1,0 +1,14 @@
+bool userHitTestFunc(int isite, int pid, double *mom,double *pos){
+  //;
+  // 200621 for GRAINEFull3DCut
+  if(isite!=0) return false;
+  double const dctr[2]={139,-24.5};
+  double const lrad = 4.;
+  double const srad = 1.;
+  TVector3 vec(pos);
+  double lon = vec.Phi()*TMath::RadToDeg();
+  double lat = 90.- vec.Theta()*TMath::RadToDeg();
+  
+  if( pow((lon-dctr[0])/lrad,2)+pow((lat-dctr[1])/srad,2) < 1 ) return true;
+  return false;
+}

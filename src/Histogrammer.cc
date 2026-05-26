@@ -110,8 +110,47 @@ void Histogrammer::setTequiv(TTree* trinfo){
 }
 
 
+void Histogrammer::addEvent(HitInfo &info, double weight){
+  for(int ihit = 0; ihit< info.nhit; ihit++){
+    int pid = info.khit[ihit];
+    int ik = m_pid2ik[pid];
 
+    TVector3 mom(info.phit[ihit]);
+    TVector3 pos(info.rhit[ihit]);
+    int is = info.site[ihit] - 1; // 1 in fortran is 0 in c++
 
+    if(ik==-1){
+      std::cout<<"error! pid:"<<pid<<std::endl; 
+      exit(0);
+    }
+    
+    double theta,phi;
+    getDirection(mom,pos,theta,phi);
+    int ic = getCoszIndex(theta);
+    if( ic>=m_ncosz || ic<0 ){
+      continue;
+    }
+    int ia = getAzimIndex(phi);
+    if( ia>=m_nazim || ia<0 ){
+      continue;
+    }
+    
+    int id = getI(ik,is,ic,ia);
+    
+    double kineVal = mom.Mag();
+    if(pid == ParticleCode::kpro || pid == ParticleCode::kprobar || pid == ParticleCode::kneut || pid == ParticleCode::kneutbar ){
+      double m = ParticleCode::mass[pid];
+      kineVal = sqrt(mom.Mag2()+pow(m,2)) - m;
+    }
+    int ibin = getEneIndex(kineVal);
+
+    if(ibin<m_nbin && ibin >= 0){
+      double w = (weight<0)?1:weight;
+      m_nobs[id][ibin] += w;
+      m_err2[id][ibin] += w*w;
+    }
+  }
+}
 
 
 

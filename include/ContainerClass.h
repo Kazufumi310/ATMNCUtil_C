@@ -121,4 +121,54 @@ struct ATMNCInputInfo{
 };
 
 
+
+struct ATMNCHit{
+  ATMNCHit();
+  int serial;
+  int site;
+  int pid;
+  double pHit[3];
+  double rHit[3];
+};
+
+
+class HitInfo{
+ public:
+  enum{GOOD=0,TOO_MUCH_PARTICLE=0x1,TOO_MUCH_PARENT=0x2,TOO_MUCH_HIT=0x4};
+  HitInfo();
+  void branch(TTree* trout,int mode = 0);
+  void setBranchAddress(TTree* trout);
+  void dump();
+  
+  int nTotPar;
+  int nTotHit;
+  
+  // hit information
+  static int const s_maxHitSize = 32768;
+  static int const s_maxParent = 64;
+  int status;
+  int nhit;
+  int *hitID;//[s_maxHitSize];
+  int *khit;//[s_maxHitSize];
+  int *site;//[s_maxHitSize];
+  double **phit;//[s_maxHitSize][3];
+  double **rhit;//[s_maxHitSize][3];
+  int *nParent;//[s_maxHitSize];
+  int **parentID;//[s_maxHitSize][s_maxParent] (=[nhit][nParent])
+  
+  // pareants of hits
+  static int const s_maxChainSize = 65536;
+  int nParticle;
+  
+  int *pid; 
+  int *death;//[s_maxChainSize]
+  int *trackid;//[s_maxChainSize];
+  double **deadX;//[s_maxChainSize][3];
+  double **deadP;//[s_maxChainSize][3];
+  double **bornX;//[s_maxChainSize][3];
+  double **bornP;//[s_maxChainSize][3];
+};
+
+
+
 #endif // ContainerClass_h__

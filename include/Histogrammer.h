@@ -23,6 +23,8 @@ public:
     m_Darea[isite] = darea; 
     std::cout<<"reset Darea["<<isite<<"] to "<<darea<<std::endl;
   }
+
+  void addEvent(HitInfo &evtInfo, double weight = 1.);
   
   // get the aggregated spectrum 
   void getSpectrum(int ik, int is, int ic, int ia, SpectrumHandler &spec);
